@@ -23,7 +23,7 @@ public class MusicPlayerGUI extends JFrame {
     private JSlider playbackSlider;
 
     public MusicPlayerGUI(){
-        super("Music Player");
+        super("Player de Musica");
 
         setSize(400, 600);
 
@@ -54,14 +54,14 @@ public class MusicPlayerGUI extends JFrame {
         songImage.setBounds(0, 50, getWidth() - 20, 225);
         add(songImage);
 
-        songTitle = new JLabel("Song Title");
+        songTitle = new JLabel("Titulo da Música");
         songTitle.setBounds(0, 285, getWidth() - 10, 30);
         songTitle.setFont(new Font("Dialog", Font.BOLD, 24));
         songTitle.setForeground(TEXT_COLOR);
         songTitle.setHorizontalAlignment(SwingConstants.CENTER);
         add(songTitle);
 
-        songArtist = new JLabel("Artist");
+        songArtist = new JLabel("Artista");
         songArtist.setBounds(0, 315, getWidth() - 10, 30);
         songArtist.setFont(new Font("Dialog", Font.PLAIN, 24));
         songArtist.setForeground(TEXT_COLOR);
@@ -106,10 +106,10 @@ public class MusicPlayerGUI extends JFrame {
         JMenuBar menuBar = new JMenuBar();
         toolBar.add(menuBar);
 
-        JMenu songMenu = new JMenu("Song");
+        JMenu songMenu = new JMenu("Musica");
         menuBar.add(songMenu);
 
-        JMenuItem loadSong = new JMenuItem("Load Song");
+        JMenuItem loadSong = new JMenuItem("Load Music");
         loadSong.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -228,8 +228,8 @@ public class MusicPlayerGUI extends JFrame {
     }
 
     public void updateSongTitleAndArtist( Musica song){
-        songTitle.setText(song.getSongTitle());
-        songArtist.setText(song.getSongArtist());
+        songTitle.setText(song.getMusicTitle());
+        songArtist.setText(song.getMusicArtist());
     }
 
     public void updatePlaybackSlider( Musica song){
@@ -241,7 +241,7 @@ public class MusicPlayerGUI extends JFrame {
         labelBeginning.setFont(new Font("Dialog", Font.BOLD, 18));
         labelBeginning.setForeground(TEXT_COLOR);
 
-        JLabel labelEnd =  new JLabel(song.getSongLength());
+        JLabel labelEnd =  new JLabel(song.getMusicLength());
         labelEnd.setFont(new Font("Dialog", Font.BOLD, 18));
         labelEnd.setForeground(TEXT_COLOR);
 
