@@ -83,6 +83,7 @@ public class MusicPlayer extends PlaybackListener {
         }
 
         if (playlist.size() > 0) {
+            playlist.ordenarPlaylist();
             musicPlayerGUI.setPlaybackSliderValue(0);
             currentTimeInMilli = 0;
 
@@ -290,5 +291,74 @@ class Playlist<T> {
 
     public int size() {
         return items.size();
+    }
+
+    public Musica buscarMusica(String nome) {
+        // Busca linear, caso a lista não esteja ordenada
+        for (T item : items) {
+            if (item instanceof Musica && ((Musica) item).getMusicTitle().equalsIgnoreCase(nome)) {
+                return (Musica) item;
+            }
+        }
+        return null; // Retorna null se a música não for encontrada
+    }
+
+    public Musica buscarMusicaBinaria(String nome) {
+        // Busca binária (requer a lista ordenada)
+        if (!(items.get(0) instanceof Musica)) return null;
+    
+        int esquerda = 0, direita = items.size() - 1;
+        while (esquerda <= direita) {
+            int meio = esquerda + (direita - esquerda) / 2;
+            Musica musicaMeio = (Musica) items.get(meio);
+    
+            int comparacao = musicaMeio.getMusicTitle().compareToIgnoreCase(nome);
+    
+            if (comparacao == 0) {
+                return musicaMeio;
+            } else if (comparacao < 0) {
+                esquerda = meio + 1;
+            } else {
+                direita = meio - 1;
+            }
+        }
+        return null;
+    }
+
+    public void ordenarPlaylist() {
+        if (items.isEmpty() || !(items.get(0) instanceof Musica)) return;
+        
+        items = mergeSort(items);
+    }
+    
+    private LinkedList<T> mergeSort(LinkedList<T> lista) {
+        if (lista.size() <= 1) return lista;
+    
+        int meio = lista.size() / 2;
+        LinkedList<T> esquerda = new LinkedList<>(lista.subList(0, meio));
+        LinkedList<T> direita = new LinkedList<>(lista.subList(meio, lista.size()));
+    
+        return merge(mergeSort(esquerda), mergeSort(direita));
+    }
+    
+    private LinkedList<T> merge(LinkedList<T> esquerda, LinkedList<T> direita) {
+        LinkedList<T> resultado = new LinkedList<>();
+        int i = 0, j = 0;
+    
+        while (i < esquerda.size() && j < direita.size()) {
+            Musica musicaEsq = (Musica) esquerda.get(i);
+            Musica musicaDir = (Musica) direita.get(j);
+    
+            if (musicaEsq.getMusicTitle().compareToIgnoreCase(musicaDir.getMusicTitle()) < 0) {
+                resultado.add(esquerda.get(i++));
+            } else {
+                resultado.add(direita.get(j++));
+            }
+        }
+    
+        while (i < esquerda.size()) resultado.add(esquerda.get(i++));
+        while (j < direita.size()) resultado.add(direita.get(j++));
+    
+        return resultado;
     }
 }
