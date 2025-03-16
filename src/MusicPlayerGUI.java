@@ -109,7 +109,7 @@ public class MusicPlayerGUI extends JFrame {
         JMenu songMenu = new JMenu("Musica");
         menuBar.add(songMenu);
 
-        JMenuItem loadSong = new JMenuItem("Load Music");
+        JMenuItem loadSong = new JMenuItem("Carregar Musica");
         loadSong.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -134,7 +134,7 @@ public class MusicPlayerGUI extends JFrame {
         JMenu playlistMenu = new JMenu("Playlist");
         menuBar.add(playlistMenu);
 
-        JMenuItem createPlaylist = new JMenuItem("Create Playlist");
+        JMenuItem createPlaylist = new JMenuItem("Criar Playlist");
         createPlaylist.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -143,7 +143,7 @@ public class MusicPlayerGUI extends JFrame {
         });
         playlistMenu.add(createPlaylist);
 
-        JMenuItem loadPlaylist = new JMenuItem("Load Playlist");
+        JMenuItem loadPlaylist = new JMenuItem("Carregar Playlist");
         loadPlaylist.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
