@@ -39,3 +39,38 @@ public class Musica {
             e.printStackTrace();
         }
     }
+
+    // Tempo de música
+    private String convertToSongLengthFormat(){
+        long minutes = mp3File.getLengthInSeconds() / 60;
+        long seconds = mp3File.getLengthInSeconds() % 60;
+        String formattedTime = String.format("%02d:%02d", minutes, seconds);
+
+        return formattedTime;
+    }
+
+    // getters
+    public String getMusicTitle() {
+        return musicTitle;
+    }
+
+    public String getMusicArtist() {
+        return musicArtist;
+    }
+
+    public String getMusicLength() {
+        return musicLength;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public Mp3File getMp3File(){
+        return mp3File;
+    }
+
+    public double getFrameRatePerMilliseconds(){
+        return frameRatePerMilliseconds;
+    }
+}
