@@ -4,6 +4,7 @@ import javazoom.jl.player.advanced.PlaybackListener;
 
 import java.io.*;
 import java.util.LinkedList;
+import java.util.Stack;
 
 public class MusicPlayer extends PlaybackListener {
     private static final Object playSignal = new Object();
@@ -11,11 +12,15 @@ public class MusicPlayer extends PlaybackListener {
     private MusicPlayerGUI musicPlayerGUI;
 
     private Musica currentSong;
-    public  Musica getCurrentSong(){
+    public Musica getCurrentSong() {
         return currentSong;
     }
 
-    private LinkedList<Musica> playlist;
+    // Usando a classe genérica Playlist<T> para armazenar músicas
+    private Playlist<Musica> playlist;
+
+    // Pilha para armazenar o histórico de músicas tocadas
+    private Stack<Musica> historyStack;
 
     private int currentPlaylistIndex;
 
@@ -28,61 +33,64 @@ public class MusicPlayer extends PlaybackListener {
     private boolean pressedNext, pressedPrev;
 
     private int currentFrame;
-    public void setCurrentFrame(int frame){
+    public void setCurrentFrame(int frame) {
         currentFrame = frame;
     }
 
     private int currentTimeInMilli;
-    public void setCurrentTimeInMilli(int timeInMilli){
+    public void setCurrentTimeInMilli(int timeInMilli) {
         currentTimeInMilli = timeInMilli;
     }
 
-    public MusicPlayer(MusicPlayerGUI musicPlayerGUI){
+    public MusicPlayer(MusicPlayerGUI musicPlayerGUI) {
         this.musicPlayerGUI = musicPlayerGUI;
+        this.historyStack = new Stack<>(); // Inicializa a pilha de histórico
     }
 
-    public void loadSong(Musica song){
+    public void loadSong(Musica song) {
         currentSong = song;
         playlist = null;
 
-        if(!songFinished)
+        if (!songFinished)
             stopSong();
 
-        if(currentSong != null){
+        if (currentSong != null) {
             currentFrame = 0;
-
             currentTimeInMilli = 0;
-
             musicPlayerGUI.setPlaybackSliderValue(0);
+
+            // Adiciona a música atual à pilha de histórico
+            historyStack.push(currentSong);
 
             playCurrentSong();
         }
     }
 
-    public void loadPlaylist(File playlistFile){
-        playlist = new LinkedList<>();
+    public void loadPlaylist(File playlistFile) {
+        playlist = new Playlist<>(); // Inicializa a playlist genérica
 
-        try{
+        try {
             FileReader fileReader = new FileReader(playlistFile);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
 
             String songPath;
-            while((songPath = bufferedReader.readLine()) != null){
-                Musica song = new  Musica(songPath);
-
-                playlist.add(song);
+            while ((songPath = bufferedReader.readLine()) != null) {
+                Musica song = new Musica(songPath);
+                playlist.addItem(song); // Adiciona músicas à playlist genérica
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
-        if(playlist.size() > 0){
+        if (playlist.size() > 0) {
             musicPlayerGUI.setPlaybackSliderValue(0);
             currentTimeInMilli = 0;
 
-            currentSong = playlist.get(0);
-
+            currentSong = playlist.getItem(0); // Obtém a primeira música da playlist
             currentFrame = 0;
+
+            // Adiciona a música atual à pilha de histórico
+            historyStack.push(currentSong);
 
             musicPlayerGUI.enablePauseButtonDisablePlayButton();
             musicPlayerGUI.updateSongTitleAndArtist(currentSong);
@@ -92,39 +100,39 @@ public class MusicPlayer extends PlaybackListener {
         }
     }
 
-    public void pauseSong(){
-        if(advancedPlayer != null){
+    public void pauseSong() {
+        if (advancedPlayer != null) {
             isPaused = true;
-
             stopSong();
         }
     }
 
-    public void stopSong(){
-        if(advancedPlayer != null){
+    public void stopSong() {
+        if (advancedPlayer != null) {
             advancedPlayer.stop();
             advancedPlayer.close();
             advancedPlayer = null;
         }
     }
 
-    public void nextSong(){
-        if(playlist == null) return;
+    public void nextSong() {
+        if (playlist == null) return;
 
-        if(currentPlaylistIndex + 1 > playlist.size() - 1) return;
+        if (currentPlaylistIndex + 1 > playlist.size() - 1) return;
 
         pressedNext = true;
 
-        if(!songFinished)
+        if (!songFinished)
             stopSong();
 
         currentPlaylistIndex++;
-
-        currentSong = playlist.get(currentPlaylistIndex);
+        currentSong = playlist.getItem(currentPlaylistIndex); // Obtém a próxima música da playlist
 
         currentFrame = 0;
-
         currentTimeInMilli = 0;
+
+        // Adiciona a música atual à pilha de histórico
+        historyStack.push(currentSong);
 
         musicPlayerGUI.enablePauseButtonDisablePlayButton();
         musicPlayerGUI.updateSongTitleAndArtist(currentSong);
@@ -133,23 +141,24 @@ public class MusicPlayer extends PlaybackListener {
         playCurrentSong();
     }
 
-    public void prevSong(){
-        if(playlist == null) return;
+    public void prevSong() {
+        if (playlist == null) return;
 
-        if(currentPlaylistIndex - 1 < 0) return;
+        if (currentPlaylistIndex - 1 < 0) return;
 
         pressedPrev = true;
 
-        if(!songFinished)
+        if (!songFinished)
             stopSong();
 
         currentPlaylistIndex--;
-
-        currentSong = playlist.get(currentPlaylistIndex);
+        currentSong = playlist.getItem(currentPlaylistIndex); // Obtém a música anterior da playlist
 
         currentFrame = 0;
-
         currentTimeInMilli = 0;
+
+        // Adiciona a música atual à pilha de histórico
+        historyStack.push(currentSong);
 
         musicPlayerGUI.enablePauseButtonDisablePlayButton();
         musicPlayerGUI.updateSongTitleAndArtist(currentSong);
@@ -158,74 +167,77 @@ public class MusicPlayer extends PlaybackListener {
         playCurrentSong();
     }
 
-    public void playCurrentSong(){
-        if(currentSong == null) return;
+    // Método para retroceder para a música anterior usando a pilha de histórico
+    public void goBack() {
+        if (!historyStack.isEmpty()) {
+            Musica previousSong = historyStack.pop(); // Remove a música atual da pilha
+            if (!historyStack.isEmpty()) {
+                currentSong = historyStack.peek(); // Obtém a música anterior sem removê-la da pilha
+                loadSong(currentSong); // Carrega a música anterior
+            }
+        }
+    }
 
-        try{
+    public void playCurrentSong() {
+        if (currentSong == null) return;
+
+        try {
             FileInputStream fileInputStream = new FileInputStream(currentSong.getFilePath());
             BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
 
-            // create a new advanced player
             advancedPlayer = new AdvancedPlayer(bufferedInputStream);
             advancedPlayer.setPlayBackListener(this);
 
             startMusicThread();
-
             startPlaybackSliderThread();
 
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void startMusicThread(){
+    private void startMusicThread() {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try{
-                    if(isPaused){
-                        synchronized(playSignal){
-                            // update flag
+                try {
+                    if (isPaused) {
+                        synchronized (playSignal) {
                             isPaused = false;
-
                             playSignal.notify();
                         }
-
                         advancedPlayer.play(currentFrame, Integer.MAX_VALUE);
-                    }else{
+                    } else {
                         advancedPlayer.play();
                     }
-                }catch(Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }).start();
     }
 
-    private void startPlaybackSliderThread(){
+    private void startPlaybackSliderThread() {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                if(isPaused){
-                    try{
-                        synchronized(playSignal){
+                if (isPaused) {
+                    try {
+                        synchronized (playSignal) {
                             playSignal.wait();
                         }
-                    }catch(Exception e){
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
 
-                while(!isPaused && !songFinished && !pressedNext && !pressedPrev){
-                    try{
+                while (!isPaused && !songFinished && !pressedNext && !pressedPrev) {
+                    try {
                         currentTimeInMilli++;
-
                         int calculatedFrame = (int) ((double) currentTimeInMilli * 2.08 * currentSong.getFrameRatePerMilliseconds());
-
                         musicPlayerGUI.setPlaybackSliderValue(calculatedFrame);
-
                         Thread.sleep(1);
-                    }catch(Exception e){
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
@@ -244,22 +256,39 @@ public class MusicPlayer extends PlaybackListener {
     @Override
     public void playbackFinished(PlaybackEvent evt) {
         System.out.println("Playback Finished");
-        if(isPaused){
+        if (isPaused) {
             currentFrame += (int) ((double) evt.getFrame() * currentSong.getFrameRatePerMilliseconds());
-        }else{
-            if(pressedNext || pressedPrev) return;
+        } else {
+            if (pressedNext || pressedPrev) return;
 
             songFinished = true;
 
-            if(playlist == null){
+            if (playlist == null) {
                 musicPlayerGUI.enablePlayButtonDisablePauseButton();
-            }else{
-                if(currentPlaylistIndex == playlist.size() - 1){
+            } else {
+                if (currentPlaylistIndex == playlist.size() - 1) {
                     musicPlayerGUI.enablePlayButtonDisablePauseButton();
-                }else{
+                } else {
                     nextSong();
                 }
             }
         }
+    }
+}
+
+// Classe genérica para a playlist
+class Playlist<T> {
+    private LinkedList<T> items = new LinkedList<>();
+
+    public void addItem(T item) {
+        items.add(item);
+    }
+
+    public T getItem(int index) {
+        return items.get(index);
+    }
+
+    public int size() {
+        return items.size();
     }
 }
