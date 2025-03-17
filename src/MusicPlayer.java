@@ -28,6 +28,14 @@ public class MusicPlayer extends PlaybackListener {
         this.historyStack = new Stack<>();
     }
 
+    public void setCurrentFrame(int frame){
+        currentFrame = frame;
+    }
+
+    public void setCurrentTimeInMilli(int timeInMilli){
+        currentTimeInMilli = timeInMilli;
+    }
+
     public Musica getCurrentSong() {
         return currentSong;
     }
@@ -229,6 +237,7 @@ public void playbackFinished(PlaybackEvent evt) {
     }
 }
 
+// Recursividade
 private void playNextSongRecursive(int index) {
     if (index < playlist.size()) {
         currentPlaylistIndex = index;
