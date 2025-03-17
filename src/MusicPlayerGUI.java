@@ -210,9 +210,49 @@ public class MusicPlayerGUI extends JFrame {
             }
         });
         searchSortMenu.add(sortByDuration);
+        
+        JMenu favoritesMenu = new JMenu("Favoritos");
+    menuBar.add(favoritesMenu);
 
-        add(toolBar);
-    }
+    // Botão para adicionar/remover música atual aos favoritos
+    JMenuItem toggleFavorite = new JMenuItem("Adicionar/Remover Favorito");
+    toggleFavorite.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            Musica currentSong = musicPlayer.getCurrentSong();
+            if (currentSong != null) {
+                if (musicPlayer.getFavorites().contains(currentSong)) {
+                    musicPlayer.removeFromFavorites(currentSong);
+                } else {
+                    musicPlayer.addToFavorites(currentSong);
+                }
+            } else {
+                JOptionPane.showMessageDialog(MusicPlayerGUI.this, "Nenhuma música está tocando!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            }
+        }
+    });
+    favoritesMenu.add(toggleFavorite);
+
+    // Botão para exibir a lista de favoritos
+    JMenuItem showFavorites = new JMenuItem("Exibir Favoritos");
+    showFavorites.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            List<Musica> favorites = musicPlayer.getFavorites();
+            if (!favorites.isEmpty()) {
+                new SearchResultsDialog(MusicPlayerGUI.this, favorites).setVisible(true);
+            } else {
+                JOptionPane.showMessageDialog(MusicPlayerGUI.this, "Nenhuma música favorita encontrada!", "Favoritos", JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
+    });
+    favoritesMenu.add(showFavorites);
+
+    add(toolBar);
+}
+
+        
+
 
     private void addPlaybackBtns() {
         playbackBtns = new JPanel();
