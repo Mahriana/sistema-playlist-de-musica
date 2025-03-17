@@ -21,6 +21,7 @@ public class MusicPlayer extends PlaybackListener {
     private boolean pressedNext, pressedPrev;
     private int currentFrame;
     private int currentTimeInMilli;
+    
 
     public MusicPlayer(MusicPlayerGUI musicPlayerGUI) {
         this.musicPlayerGUI = musicPlayerGUI;
@@ -52,14 +53,19 @@ public class MusicPlayer extends PlaybackListener {
 
     public void loadPlaylist(File playlistFile) {
         playlist = new Playlist<>();
+        ArrayList<Musica> tempSongs = new ArrayList<>(); // vetor dinâmico para guardar as músicas
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(playlistFile))) {
             String songPath;
             while ((songPath = bufferedReader.readLine()) != null) {
-                playlist.addItem(new Musica(songPath));
+                tempSongs.add(new Musica(songPath));
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+
+        for (Musica song : tempSongs){
+            playlist.addItem(song); // passa as músicas do vetor dinâmico para a playlist
         }
 
         if (playlist.size() > 0) {
@@ -104,6 +110,8 @@ public class MusicPlayer extends PlaybackListener {
         musicPlayerGUI.enablePauseButtonDisablePlayButton();
         musicPlayerGUI.updateSongTitleAndArtist(currentSong);
         musicPlayerGUI.updatePlaybackSlider(currentSong);
+
+        pressedNext = false;
         playCurrentSong();
     }
 
@@ -121,6 +129,8 @@ public class MusicPlayer extends PlaybackListener {
         musicPlayerGUI.enablePauseButtonDisablePlayButton();
         musicPlayerGUI.updateSongTitleAndArtist(currentSong);
         musicPlayerGUI.updatePlaybackSlider(currentSong);
+
+        pressedPrev = false;
         playCurrentSong();
     }
 
@@ -132,6 +142,10 @@ public class MusicPlayer extends PlaybackListener {
             BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
             advancedPlayer = new AdvancedPlayer(bufferedInputStream);
             advancedPlayer.setPlayBackListener(this);
+            // resetando o tempo antes de iniciar uma nova música
+            currentTimeInMilli = 0; 
+            musicPlayerGUI.setPlaybackSliderValue(0);
+
             startMusicThread();
             startPlaybackSliderThread();
         } catch (Exception e) {
@@ -171,10 +185,11 @@ public class MusicPlayer extends PlaybackListener {
 
             while (!isPaused && !songFinished && !pressedNext && !pressedPrev) {
                 try {
-                    currentTimeInMilli++;
+                    Thread.sleep(1); // atualiza o slider                 
+                    currentTimeInMilli += 1;
                     int calculatedFrame = (int) ((double) currentTimeInMilli * 2.08 * currentSong.getFrameRatePerMilliseconds());
                     musicPlayerGUI.setPlaybackSliderValue(calculatedFrame);
-                    Thread.sleep(1);
+                 
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -224,7 +239,7 @@ private void playNextSongRecursive(int index) {
         // Atualiza a interface gráfica
         musicPlayerGUI.updateSongTitleAndArtist(currentSong);
         musicPlayerGUI.updatePlaybackSlider(currentSong);
-        musicPlayerGUI.enablePauseButtonDisablePlayButton();
+        musicPlayerGUI.enablePauseButtonDisablePlayButton();        
 
         // Toca a música
         playCurrentSong();
