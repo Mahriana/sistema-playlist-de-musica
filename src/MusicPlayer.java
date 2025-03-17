@@ -3,6 +3,8 @@ import javazoom.jl.player.advanced.PlaybackEvent;
 import javazoom.jl.player.advanced.PlaybackListener;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
 public class MusicPlayer extends PlaybackListener {
@@ -189,24 +191,70 @@ public class MusicPlayer extends PlaybackListener {
     }
 
     @Override
-    public void playbackFinished(PlaybackEvent evt) {
-        System.out.println("Playback Finished");
-        if (isPaused) {
-            currentFrame += (int) ((double) evt.getFrame() * currentSong.getFrameRatePerMilliseconds());
+public void playbackFinished(PlaybackEvent evt) {
+    System.out.println("Playback Finished");
+    if (isPaused) {
+        currentFrame += (int) ((double) evt.getFrame() * currentSong.getFrameRatePerMilliseconds());
+    } else {
+        if (pressedNext || pressedPrev) return;
+
+        songFinished = true;
+
+        if (playlist == null) {
+            musicPlayerGUI.enablePlayButtonDisablePauseButton();
         } else {
-            if (pressedNext || pressedPrev) return;
-
-            songFinished = true;
-
-            if (playlist == null) {
+            if (currentPlaylistIndex == playlist.size() - 1) {
+                // Última música da playlist
                 musicPlayerGUI.enablePlayButtonDisablePauseButton();
             } else {
-                if (currentPlaylistIndex == playlist.size() - 1) {
-                    musicPlayerGUI.enablePlayButtonDisablePauseButton();
-                } else {
-                    nextSong();
-                }
+                // Toca a próxima música recursivamente
+                playNextSongRecursive(currentPlaylistIndex + 1);
             }
         }
     }
+}
+
+private void playNextSongRecursive(int index) {
+    if (index < playlist.size()) {
+        currentPlaylistIndex = index;
+        currentSong = playlist.getItem(index);
+        currentFrame = 0;
+        currentTimeInMilli = 0;
+
+        // Atualiza a interface gráfica
+        musicPlayerGUI.updateSongTitleAndArtist(currentSong);
+        musicPlayerGUI.updatePlaybackSlider(currentSong);
+        musicPlayerGUI.enablePauseButtonDisablePlayButton();
+
+        // Toca a música
+        playCurrentSong();
+    }
+}
+// Outros atributos...
+private List<Musica> favorites = new ArrayList<>(); // Lista de músicas favoritas
+
+// Método para adicionar uma música aos favoritos
+public void addToFavorites(Musica song) {
+    if (!favorites.contains(song)) {
+        favorites.add(song);
+        System.out.println("Música adicionada aos favoritos: " + song.getMusicTitle());
+    } else {
+        System.out.println("Música já está nos favoritos!");
+    }
+}
+
+// Método para remover uma música dos favoritos
+public void removeFromFavorites(Musica song) {
+    if (favorites.contains(song)) {
+        favorites.remove(song);
+        System.out.println("Música removida dos favoritos: " + song.getMusicTitle());
+    } else {
+        System.out.println("Música não está nos favoritos!");
+    }
+}
+
+// Método para obter a lista de favoritos
+public List<Musica> getFavorites() {
+    return favorites;
+}
 }
