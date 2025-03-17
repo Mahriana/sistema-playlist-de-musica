@@ -15,46 +15,36 @@ public class MusicPlayerGUI extends JFrame {
     public static final Color TEXT_COLOR = Color.WHITE;
 
     private MusicPlayer musicPlayer;
-
     private JFileChooser jFileChooser;
-
     private JLabel songTitle, songArtist;
     private JPanel playbackBtns;
     private JSlider playbackSlider;
 
-    public MusicPlayerGUI(){
-        super("Player de Musica");
-
+    public MusicPlayerGUI() {
+        super("Player de Música");
         setSize(400, 600);
-
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-
         setLocationRelativeTo(null);
-
         setResizable(false);
-
         setLayout(null);
-
         getContentPane().setBackground(FRAME_COLOR);
 
         musicPlayer = new MusicPlayer(this);
         jFileChooser = new JFileChooser();
-
         jFileChooser.setCurrentDirectory(new File("src/assets"));
-
         jFileChooser.setFileFilter(new FileNameExtensionFilter("MP3", "mp3"));
 
         addGuiComponents();
     }
 
-    private void addGuiComponents(){
+    private void addGuiComponents() {
         addToolbar();
 
         JLabel songImage = new JLabel(loadImage("src/assets/record.png"));
         songImage.setBounds(0, 50, getWidth() - 20, 225);
         add(songImage);
 
-        songTitle = new JLabel("Titulo da Música");
+        songTitle = new JLabel("Título da Música");
         songTitle.setBounds(0, 285, getWidth() - 10, 30);
         songTitle.setFont(new Font("Dialog", Font.BOLD, 24));
         songTitle.setForeground(TEXT_COLOR);
@@ -69,7 +59,7 @@ public class MusicPlayerGUI extends JFrame {
         add(songArtist);
 
         playbackSlider = new JSlider(JSlider.HORIZONTAL, 0, 100, 0);
-        playbackSlider.setBounds(getWidth()/2 - 300/2, 365, 300, 40);
+        playbackSlider.setBounds(getWidth() / 2 - 300 / 2, 365, 300, 40);
         playbackSlider.setBackground(null);
         playbackSlider.addMouseListener(new MouseAdapter() {
             @Override
@@ -80,15 +70,10 @@ public class MusicPlayerGUI extends JFrame {
             @Override
             public void mouseReleased(MouseEvent e) {
                 JSlider source = (JSlider) e.getSource();
-
                 int frame = source.getValue();
-
                 musicPlayer.setCurrentFrame(frame);
-
                 musicPlayer.setCurrentTimeInMilli((int) (frame / (2.08 * musicPlayer.getCurrentSong().getFrameRatePerMilliseconds())));
-
                 musicPlayer.playCurrentSong();
-
                 enablePauseButtonDisablePlayButton();
             }
         });
@@ -97,34 +82,29 @@ public class MusicPlayerGUI extends JFrame {
         addPlaybackBtns();
     }
 
-    private void addToolbar(){
+    private void addToolbar() {
         JToolBar toolBar = new JToolBar();
         toolBar.setBounds(0, 0, getWidth(), 20);
-
         toolBar.setFloatable(false);
 
         JMenuBar menuBar = new JMenuBar();
         toolBar.add(menuBar);
 
-        JMenu songMenu = new JMenu("Musica");
+        JMenu songMenu = new JMenu("Música");
         menuBar.add(songMenu);
 
-        JMenuItem loadSong = new JMenuItem("Carregar Musica");
+        JMenuItem loadSong = new JMenuItem("Carregar Música");
         loadSong.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int result = jFileChooser.showOpenDialog(MusicPlayerGUI.this);
                 File selectedFile = jFileChooser.getSelectedFile();
 
-                if(result == JFileChooser.APPROVE_OPTION && selectedFile != null){
-                    Musica song = new  Musica(selectedFile.getPath());
-
+                if (result == JFileChooser.APPROVE_OPTION && selectedFile != null) {
+                    Musica song = new Musica(selectedFile.getPath());
                     musicPlayer.loadSong(song);
-
                     updateSongTitleAndArtist(song);
-
                     updatePlaybackSlider(song);
-
                     enablePauseButtonDisablePlayButton();
                 }
             }
@@ -154,19 +134,68 @@ public class MusicPlayerGUI extends JFrame {
                 int result = jFileChooser.showOpenDialog(MusicPlayerGUI.this);
                 File selectedFile = jFileChooser.getSelectedFile();
 
-                if(result == JFileChooser.APPROVE_OPTION && selectedFile != null){
+                if (result == JFileChooser.APPROVE_OPTION && selectedFile != null) {
                     musicPlayer.stopSong();
-
                     musicPlayer.loadPlaylist(selectedFile);
                 }
             }
         });
         playlistMenu.add(loadPlaylist);
 
+        JMenu searchSortMenu = new JMenu("Buscar/Ordenar");
+        menuBar.add(searchSortMenu);
+
+        JMenuItem searchSong = new JMenuItem("Buscar Música");
+        searchSong.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String songName = JOptionPane.showInputDialog(MusicPlayerGUI.this, "Digite o nome da música:");
+                if (songName != null && !songName.isEmpty()) {
+                    List<Musica> resultados = musicPlayer.getPlaylist().buscarMusica(songName);
+                    if (!resultados.isEmpty()) {
+                        new SearchResultsDialog(MusicPlayerGUI.this, resultados).setVisible(true);
+                    } else {
+                        JOptionPane.showMessageDialog(MusicPlayerGUI.this, "Nenhuma música encontrada!");
+                    }
+                }
+            }
+        });
+        searchSortMenu.add(searchSong);
+
+        JMenuItem sortByTitle = new JMenuItem("Ordenar por Título");
+        sortByTitle.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                musicPlayer.getPlaylist().ordenarPorTitulo();
+                JOptionPane.showMessageDialog(MusicPlayerGUI.this, "Playlist ordenada por título!");
+            }
+        });
+        searchSortMenu.add(sortByTitle);
+
+        JMenuItem sortByArtist = new JMenuItem("Ordenar por Artista");
+        sortByArtist.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                musicPlayer.getPlaylist().ordenarPorArtista();
+                JOptionPane.showMessageDialog(MusicPlayerGUI.this, "Playlist ordenada por artista!");
+            }
+        });
+        searchSortMenu.add(sortByArtist);
+
+        JMenuItem sortByDuration = new JMenuItem("Ordenar por Duração");
+        sortByDuration.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                musicPlayer.getPlaylist().ordenarPorDuracao();
+                JOptionPane.showMessageDialog(MusicPlayerGUI.this, "Playlist ordenada por duração!");
+            }
+        });
+        searchSortMenu.add(sortByDuration);
+
         add(toolBar);
     }
 
-    private void addPlaybackBtns(){
+    private void addPlaybackBtns() {
         playbackBtns = new JPanel();
         playbackBtns.setBounds(0, 435, getWidth() - 10, 80);
         playbackBtns.setBackground(null);
@@ -189,7 +218,6 @@ public class MusicPlayerGUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 enablePauseButtonDisablePlayButton();
-
                 musicPlayer.playCurrentSong();
             }
         });
@@ -203,7 +231,6 @@ public class MusicPlayerGUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 enablePlayButtonDisablePauseButton();
-
                 musicPlayer.pauseSong();
             }
         });
@@ -223,25 +250,24 @@ public class MusicPlayerGUI extends JFrame {
         add(playbackBtns);
     }
 
-    public void setPlaybackSliderValue(int frame){
+    public void setPlaybackSliderValue(int frame) {
         playbackSlider.setValue(frame);
     }
 
-    public void updateSongTitleAndArtist( Musica song){
+    public void updateSongTitleAndArtist(Musica song) {
         songTitle.setText(song.getMusicTitle());
         songArtist.setText(song.getMusicArtist());
     }
 
-    public void updatePlaybackSlider( Musica song){
+    public void updatePlaybackSlider(Musica song) {
         playbackSlider.setMaximum(song.getMp3File().getFrameCount());
 
         Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
-
         JLabel labelBeginning = new JLabel("00:00");
         labelBeginning.setFont(new Font("Dialog", Font.BOLD, 18));
         labelBeginning.setForeground(TEXT_COLOR);
 
-        JLabel labelEnd =  new JLabel(song.getMusicLength());
+        JLabel labelEnd = new JLabel(song.getMusicLength());
         labelEnd.setFont(new Font("Dialog", Font.BOLD, 18));
         labelEnd.setForeground(TEXT_COLOR);
 
@@ -252,7 +278,7 @@ public class MusicPlayerGUI extends JFrame {
         playbackSlider.setPaintLabels(true);
     }
 
-    public void enablePauseButtonDisablePlayButton(){
+    public void enablePauseButtonDisablePlayButton() {
         JButton playButton = (JButton) playbackBtns.getComponent(1);
         JButton pauseButton = (JButton) playbackBtns.getComponent(2);
 
@@ -263,7 +289,7 @@ public class MusicPlayerGUI extends JFrame {
         pauseButton.setEnabled(true);
     }
 
-    public void enablePlayButtonDisablePauseButton(){
+    public void enablePlayButtonDisablePauseButton() {
         JButton playButton = (JButton) playbackBtns.getComponent(1);
         JButton pauseButton = (JButton) playbackBtns.getComponent(2);
 
@@ -274,15 +300,13 @@ public class MusicPlayerGUI extends JFrame {
         pauseButton.setEnabled(false);
     }
 
-    private ImageIcon loadImage(String imagePath){
-        try{
+    private ImageIcon loadImage(String imagePath) {
+        try {
             BufferedImage image = ImageIO.read(new File(imagePath));
-
             return new ImageIcon(image);
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
-
         return null;
     }
 }
