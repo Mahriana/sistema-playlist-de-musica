@@ -9,6 +9,7 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Hashtable;
+import java.util.List;
 
 public class MusicPlayerGUI extends JFrame {
     public static final Color FRAME_COLOR = Color.BLACK;
@@ -149,14 +150,32 @@ public class MusicPlayerGUI extends JFrame {
         searchSong.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String songName = JOptionPane.showInputDialog(MusicPlayerGUI.this, "Digite o nome da música:");
-                if (songName != null && !songName.isEmpty()) {
-                    List<Musica> resultados = musicPlayer.getPlaylist().buscarMusica(songName);
+                String songName = JOptionPane.showInputDialog(
+                    MusicPlayerGUI.this,
+                    "Digite o nome da música:",
+                    "Buscar Música",
+                    JOptionPane.PLAIN_MESSAGE
+                );
+
+                if (songName != null && !songName.trim().isEmpty()) {
+                    List<Musica> resultados = musicPlayer.getPlaylist().buscarMusica(songName.trim());
                     if (!resultados.isEmpty()) {
                         new SearchResultsDialog(MusicPlayerGUI.this, resultados).setVisible(true);
                     } else {
-                        JOptionPane.showMessageDialog(MusicPlayerGUI.this, "Nenhuma música encontrada!");
+                        JOptionPane.showMessageDialog(
+                            MusicPlayerGUI.this,
+                            "Nenhuma música encontrada!",
+                            "Resultado da Busca",
+                            JOptionPane.INFORMATION_MESSAGE
+                        );
                     }
+                } else if (songName != null) {
+                    JOptionPane.showMessageDialog(
+                        MusicPlayerGUI.this,
+                        "Por favor, digite o nome da música.",
+                        "Entrada Inválida",
+                        JOptionPane.WARNING_MESSAGE
+                    );
                 }
             }
         });
@@ -308,5 +327,16 @@ public class MusicPlayerGUI extends JFrame {
             e.printStackTrace();
         }
         return null;
+    }
+    public void loadSong(Musica song) {
+        try {
+            musicPlayer.loadSong(song);
+            updateSongTitleAndArtist(song);
+            updatePlaybackSlider(song);
+            enablePauseButtonDisablePlayButton();
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Erro ao carregar a música: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }

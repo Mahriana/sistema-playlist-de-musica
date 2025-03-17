@@ -24,6 +24,7 @@ public class SearchResultsDialog extends JDialog {
     }
 
     private void addDialogComponents() {
+        // Lista de resultados
         DefaultListModel<String> listModel = new DefaultListModel<>();
         for (Musica song : searchResults) {
             listModel.addElement(song.getMusicTitle() + " - " + song.getMusicArtist());
@@ -36,6 +37,7 @@ public class SearchResultsDialog extends JDialog {
         JScrollPane scrollPane = new JScrollPane(resultsList);
         add(scrollPane, BorderLayout.CENTER);
 
+        // Botão para carregar a música selecionada
         JButton loadButton = new JButton("Carregar Música");
         loadButton.addActionListener(new ActionListener() {
             @Override
@@ -43,7 +45,16 @@ public class SearchResultsDialog extends JDialog {
                 int selectedIndex = resultsList.getSelectedIndex();
                 if (selectedIndex != -1) {
                     Musica selectedSong = searchResults.get(selectedIndex);
+
+                    // Carrega a música selecionada
                     musicPlayerGUI.loadSong(selectedSong);
+
+                    // Atualiza a interface gráfica
+                    musicPlayerGUI.updateSongTitleAndArtist(selectedSong);
+                    musicPlayerGUI.updatePlaybackSlider(selectedSong);
+                    musicPlayerGUI.enablePauseButtonDisablePlayButton();
+
+                    // Fecha o diálogo de resultados
                     dispose();
                 } else {
                     JOptionPane.showMessageDialog(SearchResultsDialog.this, "Selecione uma música!");
