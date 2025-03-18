@@ -230,12 +230,13 @@ public class MusicPlayer extends PlaybackListener {
         }
     }
 
-    private void playNextSongRecursive(int index) {
-        if (index < playlist.size()) {
-            currentPlaylistIndex = index;
-            currentSong = playlist.getItem(index);
-            currentFrame = 0;
-            currentTimeInMilli = 0;
+// Recursividade
+private void playNextSongRecursive(int index) {
+    if (index < playlist.size()) {
+        currentPlaylistIndex = index;
+        currentSong = playlist.getItem(index);
+        currentFrame = 0;
+        currentTimeInMilli = 0;
 
             musicPlayerGUI.updateSongTitleAndArtist(currentSong);
             musicPlayerGUI.updatePlaybackSlider(currentSong);
