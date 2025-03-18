@@ -38,6 +38,24 @@ public class Playlist<T> {
     }
 
     public void ordenarPorDuracao() {
-        items.sort((item1, item2) -> Long.compare(((Musica) item1).getMp3File().getLengthInSeconds(), ((Musica) item2).getMp3File().getLengthInSeconds()));
+        insertionSort();
     }
+
+    private void insertionSort() {
+        int n = items.size();
+        for (int i = 1; i < n; i++) {
+            T key = items.get(i);
+            long keyDuration = ((Musica) key).getMp3File().getLengthInSeconds();
+            int j = i - 1;
+
+            // Move elementos maiores que a duração atual uma posição à frente
+            while (j >= 0 && ((Musica) items.get(j)).getMp3File().getLengthInSeconds() > keyDuration) {
+                items.set(j + 1, items.get(j));
+                j--;
+            }
+            items.set(j + 1, key);
+        }
+    }
+
+
 }
