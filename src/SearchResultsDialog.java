@@ -12,7 +12,7 @@ public class SearchResultsDialog extends JDialog {
         this.musicPlayerGUI = musicPlayerGUI;
         this.searchResults = searchResults;
 
-        setTitle("Resultados da Busca");
+        setTitle("Resultados");
         setSize(400, 300);
         setResizable(false);
         getContentPane().setBackground(MusicPlayerGUI.FRAME_COLOR);

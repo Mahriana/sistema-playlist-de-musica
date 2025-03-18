@@ -147,6 +147,23 @@ public class MusicPlayerGUI extends JFrame {
         });
         playlistMenu.add(loadPlaylist);
 
+        JMenu historyMenu = new JMenu("Histórico");
+        menuBar.add(historyMenu);
+
+        JMenuItem showHistory = new JMenuItem("Mostrar Histórico");
+        showHistory.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                List<Musica> history = musicPlayer.getHistoryStack();
+                if (!history.isEmpty()) {
+                    new SearchResultsDialog(MusicPlayerGUI.this, history).setVisible(true);
+                } else {
+                    JOptionPane.showMessageDialog(MusicPlayerGUI.this, "Nenhuma música no histórico!", "Histórico", JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
+        });
+        historyMenu.add(showHistory);
+
         JMenu searchSortMenu = new JMenu("Buscar/Ordenar");
         menuBar.add(searchSortMenu);
 
