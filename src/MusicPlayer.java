@@ -15,6 +15,7 @@ public class MusicPlayer extends PlaybackListener {
     private MusicPlayerGUI musicPlayerGUI;
     private Musica currentSong;
     private Playlist<Musica> playlist;
+    // STACK 1
     private Stack<Musica> historyStack;
     private int currentPlaylistIndex;
     private AdvancedPlayer advancedPlayer;
@@ -60,8 +61,9 @@ public class MusicPlayer extends PlaybackListener {
         }
     }
 
+    // STACK 5
     public Stack<Musica> getHistoryStack() {
-        return (Stack<Musica>) historyStack.clone();
+        return (Stack<Musica>) historyStack.clone(); // Cópia superficial da pilha
     }
 
     public void loadPlaylist(File playlistFile) {
@@ -86,6 +88,7 @@ public class MusicPlayer extends PlaybackListener {
             currentTimeInMilli = 0;
             currentSong = playlist.getItem(0);
             currentFrame = 0;
+            // STACK 2
             historyStack.push(currentSong);
             musicPlayerGUI.enablePauseButtonDisablePlayButton();
             musicPlayerGUI.updateSongTitleAndArtist(currentSong);
@@ -138,6 +141,7 @@ public class MusicPlayer extends PlaybackListener {
         currentSong = playlist.getItem(currentPlaylistIndex);
         currentFrame = 0;
         currentTimeInMilli = 0;
+        // STACK 3
         historyStack.pop();
         musicPlayerGUI.enablePauseButtonDisablePlayButton();
         musicPlayerGUI.updateSongTitleAndArtist(currentSong);

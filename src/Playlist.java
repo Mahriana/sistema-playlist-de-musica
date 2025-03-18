@@ -1,6 +1,7 @@
 import java.util.LinkedList;
 import java.util.List;
 
+// LINKEDLIST E GENERIC
 public class Playlist<T> {
     private LinkedList<T> items = new LinkedList<>();
 
@@ -16,7 +17,9 @@ public class Playlist<T> {
         return items.size();
     }
 
+    // BUSCA LINEAR
     public List<Musica> buscarMusica(String nome) {
+        // LINKEDLIST
         List<Musica> resultados = new LinkedList<>();
         for (T item : items) {
             if (item instanceof Musica) {
@@ -41,6 +44,7 @@ public class Playlist<T> {
         insertionSort();
     }
 
+    // ORDENAÇÃO
     private void insertionSort() {
         int n = items.size();
         for (int i = 1; i < n; i++) {
