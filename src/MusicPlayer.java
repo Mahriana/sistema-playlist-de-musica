@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
+import javax.swing.SwingUtilities;
+
 public class MusicPlayer extends PlaybackListener {
     private static final Object playSignal = new Object();
 
@@ -21,11 +23,18 @@ public class MusicPlayer extends PlaybackListener {
     private boolean pressedNext, pressedPrev;
     private int currentFrame;
     private int currentTimeInMilli;
-    
 
     public MusicPlayer(MusicPlayerGUI musicPlayerGUI) {
         this.musicPlayerGUI = musicPlayerGUI;
         this.historyStack = new Stack<>();
+    }
+
+    public void setCurrentFrame(int frame) {
+        currentFrame = frame;
+    }
+
+    public void setCurrentTimeInMilli(int timeInMilli) {
+        currentTimeInMilli = timeInMilli;
     }
 
     public Musica getCurrentSong() {
@@ -53,7 +62,7 @@ public class MusicPlayer extends PlaybackListener {
 
     public void loadPlaylist(File playlistFile) {
         playlist = new Playlist<>();
-        ArrayList<Musica> tempSongs = new ArrayList<>(); // vetor dinâmico para guardar as músicas
+        ArrayList<Musica> tempSongs = new ArrayList<>();
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(playlistFile))) {
             String songPath;
@@ -64,8 +73,8 @@ public class MusicPlayer extends PlaybackListener {
             e.printStackTrace();
         }
 
-        for (Musica song : tempSongs){
-            playlist.addItem(song); // passa as músicas do vetor dinâmico para a playlist
+        for (Musica song : tempSongs) {
+            playlist.addItem(song);
         }
 
         if (playlist.size() > 0) {
@@ -142,10 +151,8 @@ public class MusicPlayer extends PlaybackListener {
             BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
             advancedPlayer = new AdvancedPlayer(bufferedInputStream);
             advancedPlayer.setPlayBackListener(this);
-            // resetando o tempo antes de iniciar uma nova música
-            currentTimeInMilli = 0; 
-            musicPlayerGUI.setPlaybackSliderValue(0);
 
+            // Inicia a reprodução a partir do frame atual
             startMusicThread();
             startPlaybackSliderThread();
         } catch (Exception e) {
@@ -161,8 +168,10 @@ public class MusicPlayer extends PlaybackListener {
                         isPaused = false;
                         playSignal.notify();
                     }
+                    // Reproduz a música a partir do frame atual
                     advancedPlayer.play(currentFrame, Integer.MAX_VALUE);
                 } else {
+                    // Reproduz a música do início
                     advancedPlayer.play();
                 }
             } catch (Exception e) {
@@ -173,23 +182,17 @@ public class MusicPlayer extends PlaybackListener {
 
     private void startPlaybackSliderThread() {
         new Thread(() -> {
-            if (isPaused) {
-                try {
-                    synchronized (playSignal) {
-                        playSignal.wait();
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
             while (!isPaused && !songFinished && !pressedNext && !pressedPrev) {
                 try {
-                    Thread.sleep(1); // atualiza o slider                 
-                    currentTimeInMilli += 1;
+                    currentTimeInMilli++;
+
                     int calculatedFrame = (int) ((double) currentTimeInMilli * 2.08 * currentSong.getFrameRatePerMilliseconds());
-                    musicPlayerGUI.setPlaybackSliderValue(calculatedFrame);
-                 
+
+                    SwingUtilities.invokeLater(() -> {
+                        musicPlayerGUI.setPlaybackSliderValue(calculatedFrame);
+                    });
+
+                    Thread.sleep(1);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -206,70 +209,65 @@ public class MusicPlayer extends PlaybackListener {
     }
 
     @Override
-public void playbackFinished(PlaybackEvent evt) {
-    System.out.println("Playback Finished");
-    if (isPaused) {
-        currentFrame += (int) ((double) evt.getFrame() * currentSong.getFrameRatePerMilliseconds());
-    } else {
-        if (pressedNext || pressedPrev) return;
-
-        songFinished = true;
-
-        if (playlist == null) {
-            musicPlayerGUI.enablePlayButtonDisablePauseButton();
+    public void playbackFinished(PlaybackEvent evt) {
+        System.out.println("Playback Finished");
+        if (isPaused) {
+            currentFrame += (int) ((double) evt.getFrame() * currentSong.getFrameRatePerMilliseconds());
         } else {
-            if (currentPlaylistIndex == playlist.size() - 1) {
-                // Última música da playlist
+            if (pressedNext || pressedPrev) return;
+
+            songFinished = true;
+
+            if (playlist == null) {
                 musicPlayerGUI.enablePlayButtonDisablePauseButton();
             } else {
-                // Toca a próxima música recursivamente
-                playNextSongRecursive(currentPlaylistIndex + 1);
+                if (currentPlaylistIndex == playlist.size() - 1) {
+                    musicPlayerGUI.enablePlayButtonDisablePauseButton();
+                } else {
+                    playNextSongRecursive(currentPlaylistIndex + 1);
+                }
             }
         }
     }
-}
 
-private void playNextSongRecursive(int index) {
-    if (index < playlist.size()) {
-        currentPlaylistIndex = index;
-        currentSong = playlist.getItem(index);
-        currentFrame = 0;
-        currentTimeInMilli = 0;
+    private void playNextSongRecursive(int index) {
+        if (index < playlist.size()) {
+            currentPlaylistIndex = index;
+            currentSong = playlist.getItem(index);
+            currentFrame = 0;
+            currentTimeInMilli = 0;
 
-        // Atualiza a interface gráfica
-        musicPlayerGUI.updateSongTitleAndArtist(currentSong);
-        musicPlayerGUI.updatePlaybackSlider(currentSong);
-        musicPlayerGUI.enablePauseButtonDisablePlayButton();        
+            musicPlayerGUI.updateSongTitleAndArtist(currentSong);
+            musicPlayerGUI.updatePlaybackSlider(currentSong);
+            musicPlayerGUI.enablePauseButtonDisablePlayButton();
 
-        // Toca a música
-        playCurrentSong();
+            playCurrentSong();
+
+            playNextSongRecursive(index + 1);
+        }
     }
-}
-// Outros atributos...
-private List<Musica> favorites = new ArrayList<>(); // Lista de músicas favoritas
 
-// Método para adicionar uma música aos favoritos
-public void addToFavorites(Musica song) {
-    if (!favorites.contains(song)) {
-        favorites.add(song);
-        System.out.println("Música adicionada aos favoritos: " + song.getMusicTitle());
-    } else {
-        System.out.println("Música já está nos favoritos!");
+    private List<Musica> favorites = new ArrayList<>();
+
+    public void addToFavorites(Musica song) {
+        if (!favorites.contains(song)) {
+            favorites.add(song);
+            System.out.println("Música adicionada aos favoritos: " + song.getMusicTitle());
+        } else {
+            System.out.println("Música já está nos favoritos!");
+        }
     }
-}
 
-// Método para remover uma música dos favoritos
-public void removeFromFavorites(Musica song) {
-    if (favorites.contains(song)) {
-        favorites.remove(song);
-        System.out.println("Música removida dos favoritos: " + song.getMusicTitle());
-    } else {
-        System.out.println("Música não está nos favoritos!");
+    public void removeFromFavorites(Musica song) {
+        if (favorites.contains(song)) {
+            favorites.remove(song);
+            System.out.println("Música removida dos favoritos: " + song.getMusicTitle());
+        } else {
+            System.out.println("Música não está nos favoritos!");
+        }
     }
-}
 
-// Método para obter a lista de favoritos
-public List<Musica> getFavorites() {
-    return favorites;
-}
+    public List<Musica> getFavorites() {
+        return favorites;
+    }
 }

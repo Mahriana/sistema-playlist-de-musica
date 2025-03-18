@@ -65,15 +65,22 @@ public class MusicPlayerGUI extends JFrame {
         playbackSlider.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                musicPlayer.pauseSong();
+                musicPlayer.pauseSong(); // Pausa a música enquanto o usuário arrasta a barra
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
                 JSlider source = (JSlider) e.getSource();
-                int frame = source.getValue();
+                int frame = source.getValue(); // Obtém o valor do slider
+
+                // Define o frame atual da música com base no valor do slider
                 musicPlayer.setCurrentFrame(frame);
-                musicPlayer.setCurrentTimeInMilli((int) (frame / (2.08 * musicPlayer.getCurrentSong().getFrameRatePerMilliseconds())));
+
+                // Calcula o tempo atual em milissegundos
+                int timeInMilli = (int) (frame / (2.08 * musicPlayer.getCurrentSong().getFrameRatePerMilliseconds()));
+                musicPlayer.setCurrentTimeInMilli(timeInMilli);
+
+                // Continua a reprodução da música a partir do frame selecionado
                 musicPlayer.playCurrentSong();
                 enablePauseButtonDisablePlayButton();
             }
@@ -103,10 +110,7 @@ public class MusicPlayerGUI extends JFrame {
 
                 if (result == JFileChooser.APPROVE_OPTION && selectedFile != null) {
                     Musica song = new Musica(selectedFile.getPath());
-                    musicPlayer.loadSong(song);
-                    updateSongTitleAndArtist(song);
-                    updatePlaybackSlider(song);
-                    enablePauseButtonDisablePlayButton();
+                    loadSong(song);
                 }
             }
         });
@@ -210,49 +214,44 @@ public class MusicPlayerGUI extends JFrame {
             }
         });
         searchSortMenu.add(sortByDuration);
-        
+
         JMenu favoritesMenu = new JMenu("Favoritos");
-    menuBar.add(favoritesMenu);
+        menuBar.add(favoritesMenu);
 
-    // Botão para adicionar/remover música atual aos favoritos
-    JMenuItem toggleFavorite = new JMenuItem("Adicionar/Remover Favorito");
-    toggleFavorite.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            Musica currentSong = musicPlayer.getCurrentSong();
-            if (currentSong != null) {
-                if (musicPlayer.getFavorites().contains(currentSong)) {
-                    musicPlayer.removeFromFavorites(currentSong);
+        JMenuItem toggleFavorite = new JMenuItem("Adicionar/Remover Favorito");
+        toggleFavorite.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Musica currentSong = musicPlayer.getCurrentSong();
+                if (currentSong != null) {
+                    if (musicPlayer.getFavorites().contains(currentSong)) {
+                        musicPlayer.removeFromFavorites(currentSong);
+                    } else {
+                        musicPlayer.addToFavorites(currentSong);
+                    }
                 } else {
-                    musicPlayer.addToFavorites(currentSong);
+                    JOptionPane.showMessageDialog(MusicPlayerGUI.this, "Nenhuma música está tocando!", "Aviso", JOptionPane.WARNING_MESSAGE);
                 }
-            } else {
-                JOptionPane.showMessageDialog(MusicPlayerGUI.this, "Nenhuma música está tocando!", "Aviso", JOptionPane.WARNING_MESSAGE);
             }
-        }
-    });
-    favoritesMenu.add(toggleFavorite);
+        });
+        favoritesMenu.add(toggleFavorite);
 
-    // Botão para exibir a lista de favoritos
-    JMenuItem showFavorites = new JMenuItem("Exibir Favoritos");
-    showFavorites.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            List<Musica> favorites = musicPlayer.getFavorites();
-            if (!favorites.isEmpty()) {
-                new SearchResultsDialog(MusicPlayerGUI.this, favorites).setVisible(true);
-            } else {
-                JOptionPane.showMessageDialog(MusicPlayerGUI.this, "Nenhuma música favorita encontrada!", "Favoritos", JOptionPane.INFORMATION_MESSAGE);
+        JMenuItem showFavorites = new JMenuItem("Exibir Favoritos");
+        showFavorites.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                List<Musica> favorites = musicPlayer.getFavorites();
+                if (!favorites.isEmpty()) {
+                    new SearchResultsDialog(MusicPlayerGUI.this, favorites).setVisible(true);
+                } else {
+                    JOptionPane.showMessageDialog(MusicPlayerGUI.this, "Nenhuma música favorita encontrada!", "Favoritos", JOptionPane.INFORMATION_MESSAGE);
+                }
             }
-        }
-    });
-    favoritesMenu.add(showFavorites);
+        });
+        favoritesMenu.add(showFavorites);
 
-    add(toolBar);
-}
-
-        
-
+        add(toolBar);
+    }
 
     private void addPlaybackBtns() {
         playbackBtns = new JPanel();
@@ -310,7 +309,12 @@ public class MusicPlayerGUI extends JFrame {
     }
 
     public void setPlaybackSliderValue(int frame) {
-        playbackSlider.setValue(frame);
+        try {
+            playbackSlider.setValue(frame);
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Erro ao atualizar a barra de tempo: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     public void updateSongTitleAndArtist(Musica song) {
@@ -368,6 +372,7 @@ public class MusicPlayerGUI extends JFrame {
         }
         return null;
     }
+
     public void loadSong(Musica song) {
         try {
             musicPlayer.loadSong(song);
